@@ -4,15 +4,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gestão de Obras</title>
+  <title>Gealta - Construções</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .navbar {
+      background: linear-gradient(to right, #c00, #007bff);
+    }
+
+    .navbar-brand img {
+      height: 40px;
+      margin-right: 10px;
+    }
+
+    .card-header {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-primary, .btn-success {
+      background-color: #c00;
+      border-color: #c00;
+    }
+
+    .btn-primary:hover, .btn-success:hover {
+      background-color: #a00;
+    }
+
+    h1 {
+      color: #c00;
+    }
+  </style>
 </head>
 
-<body class="bg-light">
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark px-4">
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="https://i.imgur.com/yCR0zix.png" alt="Logo Gealta">
+      <strong>Gealta - Construções</strong>
+    </a>
+  </nav>
+
   <div class="container py-4">
     <h1 class="mb-4 text-center">Gestão de Obras</h1>
 
-    <!-- Cadastro de Obra -->
     <div class="card mb-3">
       <div class="card-header">Cadastrar Nova Obra</div>
       <div class="card-body">
@@ -21,7 +59,6 @@
       </div>
     </div>
 
-    <!-- Lançar Gasto -->
     <div class="card mb-3">
       <div class="card-header">Lançar Gasto</div>
       <div class="card-body">
@@ -32,7 +69,6 @@
       </div>
     </div>
 
-    <!-- Lista de Gastos -->
     <div class="card">
       <div class="card-header">Gastos por Obra</div>
       <div class="card-body" id="gastos-lista"></div>
@@ -54,7 +90,6 @@
       getDocs
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAn64Ruhj0LH5p-Skb8QXgZiUTl1TIpniA",
       authDomain: "construsistem-3ea46.firebaseapp.com",
@@ -73,8 +108,13 @@
     async function cadastrarObra() {
       const nome = document.getElementById("obra-nome").value.trim();
       if (!nome) return alert("Nome da obra é obrigatório");
-      await addDoc(collection(db, "obras"), { nome });
-      document.getElementById("obra-nome").value = "";
+      try {
+        await addDoc(collection(db, "obras"), { nome });
+        document.getElementById("obra-nome").value = "";
+      } catch (e) {
+        alert("Erro ao cadastrar obra");
+        console.error(e);
+      }
     }
 
     async function lancarGasto() {
@@ -82,9 +122,14 @@
       const descricao = document.getElementById("descricao-gasto").value.trim();
       const valor = parseFloat(document.getElementById("valor-gasto").value);
       if (!obraId || !descricao || isNaN(valor)) return alert("Preencha todos os campos");
-      await addDoc(collection(db, "gastos"), { obraId, descricao, valor });
-      document.getElementById("descricao-gasto").value = "";
-      document.getElementById("valor-gasto").value = "";
+      try {
+        await addDoc(collection(db, "gastos"), { obraId, descricao, valor });
+        document.getElementById("descricao-gasto").value = "";
+        document.getElementById("valor-gasto").value = "";
+      } catch (e) {
+        alert("Erro ao lançar gasto");
+        console.error(e);
+      }
     }
 
     async function excluirObra(id) {
@@ -117,12 +162,11 @@
           const listaGastos = gastos.filter(g => g.obraId === obra.id);
           const total = listaGastos.reduce((soma, g) => soma + g.valor, 0).toFixed(2);
           const linhas = listaGastos
-            .map(
-              gasto => `<li class="list-group-item d-flex justify-content-between align-items-center">
+            .map(gasto => `
+              <li class="list-group-item d-flex justify-content-between align-items-center">
                 ${gasto.descricao} - R$ ${gasto.valor.toFixed(2)}
                 <button class="btn btn-sm btn-outline-danger excluir-gasto" data-id="${gasto.id}">Excluir</button>
-              </li>`
-            )
+              </li>`)
             .join("");
 
           return `
@@ -137,7 +181,6 @@
         })
         .join("");
 
-      // Conectar eventos de excluir após renderizar
       document.querySelectorAll(".excluir-obra").forEach(button => {
         button.addEventListener("click", () => excluirObra(button.getAttribute("data-id")));
       });
@@ -159,11 +202,9 @@
       atualizarInterface();
     });
 
-    // Conectar botões principais
     document.getElementById('btn-cadastrar-obra').addEventListener('click', cadastrarObra);
     document.getElementById('btn-lancar-gasto').addEventListener('click', lancarGasto);
   </script>
-
 </body>
 
 </html>
